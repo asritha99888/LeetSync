@@ -1,0 +1,1 @@
+console.log("LeetSync service worker started.");

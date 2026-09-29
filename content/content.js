@@ -1,0 +1,1 @@
+console.log("LeetSync content script loaded.");
