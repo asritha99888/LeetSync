@@ -15,8 +15,19 @@
                 "https://leetcode.com/problems/*"
             ],
             "js": [
+                "content/page-script.js"
+            ],
+            "world": "MAIN",
+            "run_at": "document_start"
+        },
+        {
+            "matches": [
+                "https://leetcode.com/problems/*"
+            ],
+            "js": [
                 "content/content.js"
-            ]
+            ],
+            "run_at": "document_idle"
         }
     ],
     "permissions": [
@@ -25,6 +36,8 @@
     ],
     "host_permissions": [
         "https://leetcode.com/*",
-        "https://api.github.com/*"
+        "https://api.github.com/*",
+        "https://github.com/*",
+        "http://localhost:3000/*"
     ]
 }

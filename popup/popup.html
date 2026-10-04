@@ -1,20 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LeetSync</title>
     <link rel="stylesheet" href="popup.css">
 </head>
 
 <body>
-    <h1>LeetSync</h1>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-brand">
+                <div class="logo-icon">⚡</div>
+                <div class="brand-text">
+                    <h2>LeetSync</h2>
+                    <span class="subtitle">LeetCode &rarr; GitHub Sync</span>
+                </div>
+            </div>
+            <div id="connection-pill" class="status-pill status-disconnected">
+                <span class="dot"></span>
+                <span id="connection-text">Disconnected</span>
+            </div>
+        </header>
 
-    <p id="status">Extension is ready.</p>
+        <!-- Auth Alert (shown on 401 or auth required) -->
+        <div id="auth-alert" class="alert alert-error hidden">
+            <span class="alert-icon">⚠️</span>
+            <div class="alert-body">
+                <strong>Authentication Required</strong>
+                <p>GitHub token is invalid or expired (HTTP 401). Please re-authenticate below.</p>
+            </div>
+        </div>
 
-    <button id="github-login">
-        Authenticate with GitHub
-    </button>
+        <!-- Notification Banner -->
+        <div id="notification-banner" class="banner hidden"></div>
+
+        <!-- Section 1: Authentication -->
+        <section class="card" id="auth-card">
+            <div class="card-header">
+                <h3>GitHub Authentication</h3>
+            </div>
+            <div class="card-body">
+                <!-- Logged In View -->
+                <div id="auth-connected-view" class="hidden">
+                    <div class="user-profile">
+                        <div class="user-avatar" id="user-avatar">🐙</div>
+                        <div class="user-info">
+                            <span class="user-label">Connected as</span>
+                            <span class="user-login" id="user-login-name">@username</span>
+                        </div>
+                    </div>
+                    <button id="btn-disconnect" class="btn btn-secondary btn-sm">Disconnect</button>
+                </div>
+
+                <!-- Logged Out View -->
+                <div id="auth-disconnected-view">
+                    <!-- Primary Method: OAuth 2.0 via chrome.identity -->
+                    <div class="oauth-section">
+                        <div class="method-header">
+                            <span class="method-badge">Recommended</span>
+                            <h4>OAuth 2.0 (chrome.identity)</h4>
+                        </div>
+                        <p class="description-text">Authorize with GitHub OAuth using Chrome's Identity API with
+                            <code>repo</code> scope.
+                        </p>
+
+                        <div class="input-group">
+                            <label for="input-client-id">OAuth App Client ID</label>
+                            <input type="text" id="input-client-id" placeholder="e.g. Ov23li..." autocomplete="off" />
+                        </div>
+
+                        <button id="btn-oauth-login" class="btn btn-primary">
+                            🔐 Authenticate via OAuth 2.0
+                        </button>
+
+                        <div class="redirect-info">
+                            <span>OAuth Callback URL:</span>
+                            <code id="redirect-uri-display">Loading redirect URL...</code>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Method: Personal Access Token (Testing / Development Fallback) -->
+                    <div class="pat-divider">
+                        <span>OR TESTING FALLBACK</span>
+                    </div>
+
+                    <div class="pat-accordion-toggle" id="pat-accordion-toggle">
+                        <span>Use Personal Access Token (PAT) &rsaquo;</span>
+                    </div>
+
+                    <div class="pat-panel hidden" id="pat-panel">
+                        <div class="input-group">
+                            <label for="input-token">Personal Access Token (repo scope)</label>
+                            <input type="password" id="input-token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" />
+                        </div>
+                        <button id="btn-connect-token" class="btn btn-secondary btn-sm">Connect with Token</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Repository Configuration -->
+        <section class="card" id="repo-card">
+            <div class="card-header">
+                <h3>Target Repository</h3>
+                <span id="repo-status-pill" class="badge badge-neutral">Not Configured</span>
+            </div>
+            <div class="card-body">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="input-repo-owner">Owner / Org</label>
+                        <input type="text" id="input-repo-owner" placeholder="e.g. asritha99888" />
+                    </div>
+                    <div class="input-group">
+                        <label for="input-repo-name">Repository</label>
+                        <input type="text" id="input-repo-name" placeholder="e.g. leetcode-solutions" />
+                    </div>
+                </div>
+                <div class="button-row">
+                    <button id="btn-save-repo" class="btn btn-primary btn-sm">Save Config</button>
+                    <button id="btn-test-repo" class="btn btn-secondary btn-sm">Test Access</button>
+                </div>
+                <div id="repo-feedback" class="feedback-text hidden"></div>
+            </div>
+        </section>
+
+        <!-- Section 3: Last Sync Status -->
+        <section class="card" id="sync-card">
+            <div class="card-header">
+                <h3>Last Sync Activity</h3>
+                <span id="sync-status-badge" class="badge badge-idle">Idle</span>
+            </div>
+            <div class="card-body">
+                <div id="sync-details">
+                    <div class="sync-row">
+                        <span class="sync-label">Problem:</span>
+                        <strong id="sync-problem-title" class="sync-value">None yet</strong>
+                    </div>
+                    <div class="sync-row">
+                        <span class="sync-label">Status:</span>
+                        <span id="sync-message" class="sync-value">Waiting for accepted submission on LeetCode</span>
+                    </div>
+                    <div class="sync-row">
+                        <span class="sync-label">Time:</span>
+                        <span id="sync-timestamp" class="sync-value">—</span>
+                    </div>
+                    <div id="sync-link-container" class="sync-row hidden">
+                        <a id="sync-github-link" href="#" target="_blank" class="github-link">View File on GitHub
+                            &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <span>LeetSync v1.0 • GDG × Iris 2026</span>
+        </footer>
+    </div>
 
     <script src="popup.js"></script>
 </body>
