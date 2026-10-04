@@ -255,6 +255,27 @@ function extractLanguage() {
     console.error("[LeetSync] Could not determine submission language.");
     return null;
 }
+async function waitForLanguage(maxWaitMs = 5000) {
+    const interval = 200;
+    let elapsed = 0;
+
+    while (elapsed < maxWaitMs) {
+        const language = extractLanguage();
+
+        if (language) {
+            return language;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, interval));
+        elapsed += interval;
+    }
+
+    console.error(
+        `[LeetSync] Language was not detected after ${maxWaitMs}ms.`
+    );
+
+    return null;
+}
 
 /**
  * Normalizes language string to standardized identifier.
@@ -364,7 +385,7 @@ async function extractSourceCode() {
 async function extractSubmissionData(detectedSubmissionId) {
     const problemSlug = extractProblemSlug();
     const problemTitle = extractProblemTitle(problemSlug);
-    const language = extractLanguage();
+    const language = await waitForLanguage();
     if (!language) {
         console.error("[LeetSync] Could not determine submission language. Aborting sync.");
         return null;
@@ -419,7 +440,12 @@ async function handleAcceptedSubmission(detectedSubmissionId) {
     try {
         console.log("[LeetSync:Diagnostics] Collecting submission data for accepted solution...");
         const submissionData = await extractSubmissionData(detectedSubmissionId);
-
+        if (!submissionData) {
+            console.error(
+                "[LeetSync] Submission data extraction failed. Aborting sync."
+            );
+            return;
+        }
         // Guard against duplicate processing
         if (await isSubmissionAlreadySynced(submissionData.submissionId)) {
             console.log(`[LeetSync:Diagnostics] Submission ${submissionData.submissionId} was already synced. Skipping.`);
