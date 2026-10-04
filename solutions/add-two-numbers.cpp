@@ -77,7 +77,7 @@ public:
         }
         
         // If there's an extra carry left at the very end (e.g., 5+5=10)
-        if (carry > 0) {
+        if (carry != 0) {
             tail->next = new ListNode(carry);
         }
         
